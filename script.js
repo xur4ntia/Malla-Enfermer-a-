@@ -1,35 +1,47 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("El DOM está completamente cargado");
+    
     const courses = document.querySelectorAll('.course');
     const resetBtn = document.getElementById('reset-btn');
     const completeAllBtn = document.getElementById('complete-all-btn');
     
-    // Cargar estado guardado
-    loadProgress();
-    
-    // Manejar clic en cursos
+    if (!courses.length) console.error("No se encontraron elementos con clase 'course'");
+    if (!resetBtn) console.error("No se encontró el botón reset-btn");
+    if (!completeAllBtn) console.error("No se encontró el botón complete-all-btn");
+
+    // Función para manejar el clic en los cursos
+    function handleCourseClick() {
+        console.log("Curso clickeado:", this.getAttribute('data-course'));
+        
+        if (this.classList.contains('locked')) {
+            const prerequisites = this.getAttribute('data-prerequisites');
+            console.log("Prerrequisitos:", prerequisites);
+            alert(Este curso tiene los siguientes prerrequisitos: ${prerequisites});
+            return;
+        }
+        
+        if (this.classList.contains('pending')) {
+            this.classList.remove('pending');
+            this.classList.add('completed');
+            console.log("Curso marcado como completado");
+        } else if (this.classList.contains('completed')) {
+            this.classList.remove('completed');
+            this.classList.add('pending');
+            console.log("Curso marcado como pendiente");
+        }
+        
+        updateLockedCourses();
+        saveProgress();
+    }
+
+    // Asignar event listeners a los cursos
     courses.forEach(course => {
-        course.addEventListener('click', function() {
-            if (this.classList.contains('locked')) {
-                const prerequisites = this.getAttribute('data-prerequisites');
-                alert(Este curso tiene los siguientes prerrequisitos: ${prerequisites});
-                return;
-            }
-            
-            if (this.classList.contains('pending')) {
-                this.classList.remove('pending');
-                this.classList.add('completed');
-            } else if (this.classList.contains('completed')) {
-                this.classList.remove('completed');
-                this.classList.add('pending');
-            }
-            
-            updateLockedCourses();
-            saveProgress();
-        });
+        course.addEventListener('click', handleCourseClick);
     });
     
     // Botón para reiniciar todo
     resetBtn.addEventListener('click', function() {
+        console.log("Reiniciando todo el progreso");
         courses.forEach(course => {
             if (!course.classList.contains('locked')) {
                 course.classList.remove('completed');
@@ -42,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Botón para marcar todo como aprobado
     completeAllBtn.addEventListener('click', function() {
+        console.log("Marcando todos los cursos como aprobados");
         courses.forEach(course => {
             course.classList.remove('pending', 'locked');
             course.classList.add('completed');
@@ -51,6 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Actualizar cursos bloqueados
     function updateLockedCourses() {
+        console.log("Actualizando cursos bloqueados");
         courses.forEach(course => {
             if (course.classList.contains('locked')) {
                 const prerequisites = course.getAttribute('data-prerequisites');
@@ -65,6 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (allPrereqsMet) {
                         course.classList.remove('locked');
                         course.classList.add('pending');
+                        console.log(Curso ${course.getAttribute('data-course')} desbloqueado);
                     }
                 }
             }
@@ -80,18 +95,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         localStorage.setItem('completedCourses', JSON.stringify(completedCourses));
+        console.log("Progreso guardado:", completedCourses);
     }
     
     // Cargar progreso desde localStorage
     function loadProgress() {
-        const completedCourses = JSON.parse(localStorage.getItem('completedCourses')) || [];
-        courses.forEach(course => {
-            const courseName = course.getAttribute('data-course');
-            if (completedCourses.includes(courseName)) {
-                course.classList.remove('pending', 'locked');
-                course.classList.add('completed');
-            }
-        });
-        updateLockedCourses();
+        try {
+            const savedData = localStorage.getItem('completedCourses');
+            const completedCourses = savedData ? JSON.parse(savedData) : [];
+            console.log("Cargando progreso:", completedCourses);
+            
+            courses.forEach(course => {
+                const courseName = course.getAttribute('data-course');
+                if (completedCourses.includes(courseName)) {
+                    course.classList.remove('pending', 'locked');
+                    course.classList.add('completed');
+                }
+            });
+            updateLockedCourses();
+        } catch (e) {
+            console.error("Error al cargar el progreso:", e);
+        }
     }
+    
+    // Inicializar
+    loadProgress();
 });
