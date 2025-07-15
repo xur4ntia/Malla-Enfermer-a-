@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malla Curricular de Enfermería</title>
+    <style>
+        :root {
+            --color-pending: #a1c4fd;
+            --color-completed: #4a89dc;
+            --color-locked: #e0e0e0;
+            --color-text: #333;
+            --color-white: #fff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: var(--color-text);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .semester-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .semester {
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            padding: 20px;
+            background-color: var(--color-white);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .semester:hover {
+            transform: translateY(-5px);
+        }
+
+        .semester-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.3em;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .course {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            font-size: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .course.pending {
+            background-color: var(--color-pending);
+            color: var(--color-text);
+        }
+
+        .course.completed {
+            background-color: var(--color-completed);
+            color: var(--color-white);
+            text-decoration: line-through;
+        }
+
+        .course.locked {
+            background-color: var(--color-locked);
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        .prerequisite-info {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+            display: none;
+            background-color: rgba(255,255,255,0.9);
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .course:hover .prerequisite-info {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .semester-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Malla Curricular - Enfermería</h1>
+    
+    <div class="controls">
+        <button id="reset-btn">Reiniciar Todo</button>
+        <button id="complete-all-btn">Marcar Todo como Aprobado</button>
+    </div>
+
+    <div class="semester-container" id="malla-container">
+        <!-- La malla se generará automáticamente con JavaScript -->
+    </div>
+
+    <script>
+        // Datos completos de la malla curricular
+        const mallaData = [
+            {
+                semestre: "Semestre I",
+                cursos: [
+                    { nombre: "Disciplina y profesión de enfermería I", prerrequisitos: [] },
+                    { nombre: "Química general y orgánica", prerrequisitos: [] },
+                    { nombre: "Biología y genética", prerrequisitos: [] },
+                    { nombre: "Matemática", prerrequisitos: [] },
+                    { nombre: "Física", prerrequisitos: [] },
+                    { nombre: "Salud y Sociedad I", prerrequisitos: [] },
+                    { nombre: "Fundamentos de ética y bioética", prerrequisitos: [] },
+                    { nombre: "CFG I", prerrequisitos: [] }
+                ]
+            },
+            {
+                semestre: "Semestre II",
+                cursos: [
+                    { nombre: "Disciplina y profesión de enfermería II", prerrequisitos: ["Disciplina y profesión de enfermería I"] },
+                    { nombre: "Bioquímica", prerrequisitos: ["Química general y orgánica", "Biología y genética"] },
+                    { nombre: "Anatomía", prerrequisitos: ["Biología y genética"] },
+                    { nombre: "Histoembriología", prerrequisitos: ["Biología y genética"] },
+                    { nombre: "Fisiología general", prerrequisitos: ["Biología y genética", "Física"] },
+                    { nombre: "Salud y Sociedad II", prerrequisitos: [] },
+                    { nombre: "CGF II", prerrequisitos: [] },
+                    { nombre: "Inglés I", prerrequisitos: [] }
+                ]
+            },
+            {
+                semestre: "Semestre III",
+                cursos: [
+                    { nombre: "Disciplina y profesión de enfermería III", prerrequisitos: ["Disciplina y profesión de enfermería II"] },
+                    { nombre: "Farmacología general", prerrequisitos: ["Bioquímica"] },
+                    { nombre: "Respuestas inmunes del ser humano", prerrequisitos: ["Biología y genética", "Bioquímica"] },
+                    { nombre: "Fisiología de sistemas", prerrequisitos: ["Fisiología general"] },
+                    { nombre: "Nutrición", prerrequisitos: ["Bioquímica"] },
+                    { nombre: "Psicología general y social", prerrequisitos: [] },
+                    { nombre: "Educación para la salud", prerrequisitos: [] },
+                    { nombre: "Inglés II", prerrequisitos: [] }
+                ]
+            },
+            {
+                semestre: "Semestre IV",
+                cursos: [
+                    { nombre: "Enfermería en salud mental", prerrequisitos: ["Psicología general y social", "Disciplina y profesión de enfermería III"] },
+                    { nombre: "Farmacología sistémica para enfermería", prerrequisitos: ["Fisiología de sistemas", "Farmacología general"] },
+                    { nombre: "Agentes vivos en los procesos de salud-enfermedad", prerrequisitos: ["Anatomía", "Histoembriología", "Fisiología general"] },
+                    { nombre: "Fisiopatología", prerrequisitos: ["Fisiología de sistemas"] },
+                    { nombre: "Salud pública I", prerrequisitos: [] },
+                    { nombre: "Psicología evolutiva", prerrequisitos: ["Psicología general y social"] },
+                    { nombre: "Educación para la salud y multiculturalidad", prerrequisitos: ["Educación para la salud", "Salud y sociedad I"] },
+                    { nombre: "Inglés III", prerrequisitos: [] }
+                ]
+            },
+            {
+                semestre: "Semestre V",
+                cursos: [
+                    { nombre: "Enfermería de la infancia", prerrequisitos: ["Disciplina y profesión de enfermería III"] },
+                    { nombre: "Enfermería en la adolescencia", prerrequisitos: ["Disciplina y profesión de enfermería III"] },
+                    { nombre: "Salud pública II", prerrequisitos: ["Salud pública I"] },
+                    { nombre: "Investigación en salud y metodologías cuantitativas", prerrequisitos: ["Física", "Matemática"] },
+                    { nombre: "Gestión y administración en salud I", prerrequisitos: [] },
+                    { nombre: "Módulo integrado interdisciplinario multiprofesional I", prerrequisitos: [] }
+                ]
+            },
+            {
+                semestre: "Semestre VI",
+                cursos: [
+                    { nombre: "Enfermería en personas adultas", prerrequisitos: ["Disciplina y profesión de enfermería III"] },
+                    { nombre: "Enfermería del envejecimiento I", prerrequisitos: ["Disciplina y profesión de enfermería III"] },
+                    { nombre: "Salud y género", prerrequisitos: [] },
+                    { nombre: "Metodología de la investigación cualitativa", prerrequisitos: [] },
+                    { nombre: "Gestión y administración en salud II", prerrequisitos: ["Gestión y administración en salud I"] },
+                    { nombre: "Educación para la salud en equipos de trabajo", prerrequisitos: ["Educación para la salud"] },
+                    { nombre: "CFG III", prerrequisitos: [] }
+                ]
+            },
+            {
+                semestre: "Semestre VII",
+                cursos: [
+                    { nombre: "Enfermería en salud ocupacional", prerrequisitos: [] },
+                    { nombre: "Enfermería del envejecimiento II", prerrequisitos: ["Disciplina y profesión de enfermería III"] },
+                    { nombre: "Proyecto de investigación I", prerrequisitos: ["Investigación en salud y metodologías cuantitativas", "Metodología de la investigación cualitativa"] },
+                    { nombre: "Gestión y administración en salud III", prerrequisitos: ["Gestión y administración en salud II"] },
+                    { nombre: "CFG IV", prerrequisitos: [] }
+                ]
+            },
+            {
+                semestre: "Semestre VIII",
+                cursos: [
+                    { nombre: "Enfermería en urgencias y desastres", prerrequisitos: ["Enfermería en personas adultas", "Enfermería en la infancia", "Enfermería en la adolescencia"] },
+                    { nombre: "Enfermería en unidades de tratamiento intermedio", prerrequisitos: ["Enfermería del envejecimiento I"] },
+                    { nombre: "Proyecto de investigación II", prerrequisitos: ["Proyecto de investigación I"] },
+                    { nombre: "Módulo integrado interdisciplinario multiprofesional II", prerrequisitos: ["Módulo integrado interdisciplinario multiprofesional I"] }
+                ]
+            },
+            {
+                semestre: "Semestre IX",
+                cursos: [
+                    { nombre: "Práctica profesional integrada I", prerrequisitos: ["Enfermería en urgencias y desastres", "Enfermería en unidades de tratamiento intermedio"] },
+                    { nombre: "Formación Electiva I", prerrequisitos: ["Enfermería en urgencias y desastres", "Enfermería en unidades de tratamiento intermedio"] }
+                ]
+            },
+            {
+                semestre: "Semestre X",
+                cursos: [
+                    { nombre: "Práctica profesional integrada II", prerrequisitos: ["Enfermería en urgencias y desastres", "Enfermería en unidades de tratamiento intermedio"] },
+                    { nombre: "Formación Electiva II", prerrequisitos: ["Enfermería en urgencias y desastres", "Enfermería en unidades de tratamiento intermedio"] }
+                ]
+            }
+        ];
+
+        // Estado de la aplicación
+        const state = {
+            cursosAprobados: new Set()
+        };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar elementos del DOM
+            const mallaContainer = document.getElementById('malla-container');
+            const resetBtn = document.getElementById('reset-btn');
+            const completeAllBtn = document.getElementById('complete-all-btn');
+
+            // Cargar estado guardado
+            loadState();
+
+            // Generar la malla
+            renderMalla();
+
+            // Configurar event listeners
+            resetBtn.addEventListener('click', function() {
+                state.cursosAprobados.clear();
+                saveState();
+                renderMalla();
+            });
+
+            completeAllBtn.addEventListener('click', function() {
+                mallaData.forEach(semestre => {
+                    semestre.cursos.forEach(curso => {
+                        state.cursosAprobados.add(curso.nombre);
+                    });
+                });
+                saveState();
+                renderMalla();
+            });
+
+            // Delegación de eventos para los cursos
+            mallaContainer.addEventListener('click', function(e) {
+                const courseElement = e.target.closest('.course');
+                if (!courseElement) return;
+
+                if (courseElement.classList.contains('locked')) {
+                    const prerequisites = courseElement.dataset.prerequisites;
+                    alert(Este curso tiene los siguientes prerrequisitos: ${prerequisites});
+                    return;
+                }
+
+                const courseName = courseElement.dataset.course;
+                toggleCourseStatus(courseName);
+            });
+
+            // Función para renderizar la malla
+            function renderMalla() {
+                mallaContainer.innerHTML = '';
+
+                mallaData.forEach(semestre => {
+                    const semestreElement = document.createElement('div');
+                    semestreElement.className = 'semester';
+
+                    const titleElement = document.createElement('div');
+                    titleElement.className = 'semester-title';
+                    titleElement.textContent = semestre.semestre;
+                    semestreElement.appendChild(titleElement);
+
+                    semestre.cursos.forEach(curso => {
+                        const cursoElement = document.createElement('div');
+                        cursoElement.className = getCourseClassName(curso);
+                        cursoElement.textContent = curso.nombre;
+                        cursoElement.dataset.course = curso.nombre;
+
+                        if (curso.prerrequisitos.length > 0) {
+                            const prereqInfo = document.createElement('div');
+                            prereqInfo.className = 'prerequisite-info';
+                            prereqInfo.textContent = Prerrequisitos: ${curso.prerrequisitos.join(', ')};
+                            cursoElement.appendChild(prereqInfo);
+                            cursoElement.dataset.prerequisites = curso.prerrequisitos.join(',');
+                        }
+
+                        semestreElement.appendChild(cursoElement);
+                    });
+
+                    mallaContainer.appendChild(semestreElement);
+                });
+            }
+
+            // Obtener clase CSS para un curso
+            function getCourseClassName(curso) {
+                if (state.cursosAprobados.has(curso.nombre)) {
+                    return 'course completed';
+                }
+
+                if (curso.prerrequisitos.length > 0) {
+                    const todosPrerrequisitosCumplidos = curso.prerrequisitos.every(prereq => 
+                        state.cursosAprobados.has(prereq)
+                    );
+
+                    return todosPrerrequisitosCumplidos ? 'course pending' : 'course locked';
+                }
+
+                return 'course pending';
+            }
+
+            // Cambiar estado de un curso
+            function toggleCourseStatus(courseName) {
+                if (state.cursosAprobados.has(courseName)) {
+                    state.cursosAprobados.delete(courseName);
+                } else {
+                    state.cursosAprobados.add(courseName);
+                }
+                saveState();
+                renderMalla();
+            }
+
+            // Guardar estado en localStorage
+            function saveState() {
+                localStorage.setItem('mallaState', JSON.stringify({
+                    cursosAprobados: Array.from(state.cursosAprobados)
+                }));
+            }
+
+            // Cargar estado desde localStorage
+            function loadState() {
+                const savedState = localStorage.getItem('mallaState');
+                if (savedState) {
+                    const parsedState = JSON.parse(savedState);
+                    state.cursosAprobados = new Set(parsedState.cursosAprobados);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
